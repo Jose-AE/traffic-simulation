@@ -10,5 +10,7 @@ class RoadAgent(mesa.Agent):
     def get_directions_string(self):
         # Map of directions to symbols
         direction_map = {"U": "↑", "D": "↓", "R": "→", "L": "←"}  # Up  # Down  # Right  # Left
+
         # Convert set of directions to symbols and join into a string
-        return "".join(direction_map[dir] for dir in self.directions if dir in direction_map)
+        string = "".join(direction_map[dir] for dir in self.directions if dir in direction_map)
+        return string

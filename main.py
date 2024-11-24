@@ -24,7 +24,7 @@ def agent_portrayal(agent):
     if isinstance(agent, BuildingAgent):
         portrayal = {
             "Shape": "rect",
-            "Color": "black",
+            "Color": "#5a9bd5",
             "Filled": "true",
             "Layer": 0,
             "w": 1,  # Width of 1 cell
@@ -37,9 +37,9 @@ def agent_portrayal(agent):
             "w": 1,  # Width of 1 cell
             "h": 1,  # Height of 1 cell
             "Filled": "true",
-            "Color": "gray",
+            "Color": "white",
             "text": agent.get_directions_string(),
-            "text_color": "white",
+            "text_color": "black",
             "Layer": 0,
         }
 
@@ -49,7 +49,7 @@ def agent_portrayal(agent):
             "w": 0.9,  # Width of 1 cell
             "h": 0.9,  # Height of 1 cell
             "Filled": "true",
-            "Color": "blue",
+            "Color": "#e3c637",
             "text": str(agent.unique_id),
             "text_color": "black",
             "Layer": 1,
@@ -62,8 +62,8 @@ def agent_portrayal(agent):
             "w": 0.5,  # Width of 1 cell
             "h": 0.5,  # Height of 1 cell
             "Filled": "true",
-            "Color": agent.state,
-            "text": str(agent.unique_id),
+            "Color": agent.state.value,
+            # "text": str(agent.unique_id),
             "text_color": "black",
             "Layer": 1,
         }
@@ -73,12 +73,12 @@ def agent_portrayal(agent):
         portrayal = portrayal = {
             "Shape": "arrowHead",
             "Filled": "true",
-            "Color": "white",
+            "Color": agent.get_color(),
             "scale": 0.3,  # Size of the arrow
             "heading_x": agent.direction[0],  # X direction of arrow (0-1)
             "heading_y": agent.direction[1],  # Y direction of arrow (0-1)
-            "text": "",
-            "text_color": "black",
+            "text": "",  # agent.unique_id,
+            "text_color": "red",
             "Layer": 1,
         }
 
@@ -109,10 +109,9 @@ chart_currents = ChartModule(
 )
 
 
-print(GRID_HEIGHT, GRID_WIDTH)
-
-grid = CanvasGrid(agent_portrayal, GRID_WIDTH, GRID_HEIGHT, 1000, 1000)
+grid = CanvasGrid(agent_portrayal, GRID_WIDTH, GRID_HEIGHT, GRID_WIDTH * 42, GRID_HEIGHT * 42)
 server = ModularServer(CityModel, [grid], "Vacuum Model", simulation_params)
+
 
 server.port = 8521
 server.launch(open_browser=False)

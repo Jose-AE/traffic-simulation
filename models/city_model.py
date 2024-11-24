@@ -1,5 +1,5 @@
 import mesa
-
+import numpy as np
 from agents.building_agent import BuildingAgent
 from agents.car_agent import CarAgent
 from agents.parking_agent import ParkingAgent
@@ -32,7 +32,7 @@ class CityModel(mesa.Model):
                     self.grid.place_agent(a, (x, y))
 
                 if cell_string[0] == "R":
-                    directions = set(cell_string[3:])
+                    directions = set(cell_string[2:])
 
                     a = RoadAgent(f"Road({x},{y})", self, directions)
                     self.grid.place_agent(a, (x, y))
@@ -84,17 +84,35 @@ class CityModel(mesa.Model):
         Adds car agents to each parking space in the grid.
         Each car is placed in the same cell as a ParkingAgent.
         """
-        # Get all parking agents from the grid
-        for cell_contents, pos in self.grid.coord_iter():
-            cell_agent = cell_contents[0]  # Get agents in the cell
 
-            # Check if there's a parking agent in this cell
-            is_parking = isinstance(cell_agent, ParkingAgent)
+        parking_agents = [
+            obj
+            for cell_contents, pos in self.grid.coord_iter()
+            if cell_contents  # Check if cell is not empty
+            for obj in cell_contents
+            if isinstance(obj, ParkingAgent) and not obj.occupied
+        ]
 
-            if is_parking:
-                car = CarAgent(f"car_{cell_agent.unique_id}", self)
-                self.grid.place_agent(car, pos)
-                self.schedule.add(car)  # Add to scheduler if using time steps
+        for park in parking_agents:
+            car = CarAgent(f"car_{park.unique_id}", self)
+            self.grid.place_agent(car, park.pos)
+            self.schedule.add(car)  # Add to scheduler if using time steps
 
     def step(self):
         self.schedule.step()
+        print(f"Average happines: {self.get_average_happiness()}")
+        print(f"Average stress: {self.get_average_stress()}")
+
+    def get_average_happiness(self):
+        """Calculate average happiness, handling case of no cars."""
+        cars = [a for a in self.schedule.agents if isinstance(a, CarAgent)]
+        if cars:
+            return np.mean([car.happiness for car in cars])
+        return 0
+
+    def get_average_stress(self):
+        """Calculate average stress, handling case of no cars."""
+        cars = [a for a in self.schedule.agents if isinstance(a, CarAgent)]
+        if cars:
+            return np.mean([car.stress for car in cars])
+        return 0
