@@ -8,7 +8,7 @@ from agents.car_agent import CarAgent
 from agents.parking_agent import ParkingAgent
 from agents.road_agent import RoadAgent
 from agents.stoplight_agent import StoplightAgent
-from map import COMPLEX_MAP, SIMPLE_MAP, CITY_MAP
+from maps.city_map import CITY_MAP
 from models.city_model import CityModel
 
 
@@ -50,7 +50,7 @@ def agent_portrayal(agent):
             "h": 0.9,  # Height of 1 cell
             "Filled": "true",
             "Color": "#e3c637",
-            "text": str(agent.unique_id),
+            "text": agent.unique_id.split("_")[1],
             "text_color": "black",
             "Layer": 1,
         }
@@ -63,7 +63,7 @@ def agent_portrayal(agent):
             "h": 0.5,  # Height of 1 cell
             "Filled": "true",
             "Color": agent.state.value,
-            # "text": str(agent.unique_id),
+            "text": "M" if agent.is_mirror else f"S{agent.unique_id.split('_')[1]}",
             "text_color": "black",
             "Layer": 1,
         }
@@ -99,19 +99,20 @@ def agent_portrayal(agent):
 simulation_params = {"map": MAP}
 
 
-chart_currents = ChartModule(
+charts = ChartModule(
     [
-        {"Label": "Cleaning Efficiency", "Color": "#2563eb"},  # Blue
-        {"Label": "Dirt Remaining", "Color": "#dc2626"},  # Red
+        {"Label": "average_happiness", "Color": "#2563eb"},  # Blue
+        {"Label": "average_stress", "Color": "#dc2626"},  # Red
     ],
     canvas_height=300,
-    data_collector_name="datacollector_currents",
+    data_collector_name="datacollector",
 )
 
 
 grid = CanvasGrid(agent_portrayal, GRID_WIDTH, GRID_HEIGHT, GRID_WIDTH * 42, GRID_HEIGHT * 42)
-server = ModularServer(CityModel, [grid], "Vacuum Model", simulation_params)
-
-
+server = ModularServer(CityModel, [grid, charts], "Vacuum Model", simulation_params)
 server.port = 8521
-server.launch(open_browser=False)
+
+
+if __name__ == "__main__":
+    server.launch(open_browser=False)

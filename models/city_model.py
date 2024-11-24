@@ -5,6 +5,7 @@ from agents.car_agent import CarAgent
 from agents.parking_agent import ParkingAgent
 from agents.road_agent import RoadAgent
 from agents.stoplight_agent import StoplightAgent
+from mesa.datacollection import DataCollector
 
 
 class CityModel(mesa.Model):
@@ -18,6 +19,13 @@ class CityModel(mesa.Model):
         self.grid = mesa.space.MultiGrid(self.map_width, self.map_height, False)
         self.schedule = mesa.time.RandomActivation(self)
 
+        self.datacollector = DataCollector(
+            model_reporters={
+                "average_happiness": self.get_average_happiness,
+                "average_stress": self.get_average_stress,
+            },
+        )
+
         self.create_map()
         self.add_cars()
 
@@ -28,7 +36,7 @@ class CityModel(mesa.Model):
                 cell_string: str = self.map[y][x]
 
                 if cell_string[0] == "B":
-                    a = BuildingAgent(f"({x},{y})", self)
+                    a = BuildingAgent(f"Building({x},{y})", self)
                     self.grid.place_agent(a, (x, y))
 
                 if cell_string[0] == "R":
@@ -41,17 +49,18 @@ class CityModel(mesa.Model):
                     id = int(cell_string[2:5])
                     road_dir = set(cell_string[-1])
 
-                    a = ParkingAgent(id, self)
+                    a = ParkingAgent(f"park_{id}", self)
                     r = RoadAgent(f"Road({x},{y})", self, road_dir)
                     self.grid.place_agent(a, (x, y))
                     self.grid.place_agent(r, (x, y))
 
                 if cell_string[0] == "L":
-                    id = int(cell_string[2])
-                    directions = set(cell_string[3:])
+                    id = int(cell_string[3:5])
+                    mirror = cell_string[1] == "M"
+                    direction = set(cell_string[-1])
 
-                    a = StoplightAgent(id, self)
-                    r = RoadAgent(f"Road({x},{y})", self, directions)
+                    a = StoplightAgent(f"{'mirror_' if mirror else ''}light_{id}", self, mirror)
+                    r = RoadAgent(f"Road({x},{y})", self, direction)
 
                     self.grid.place_agent(a, (x, y))
                     self.grid.place_agent(r, (x, y))
@@ -94,12 +103,14 @@ class CityModel(mesa.Model):
         ]
 
         for park in parking_agents:
-            car = CarAgent(f"car_{park.unique_id}", self)
+            car = CarAgent(f"car_{park.unique_id.split('_')[1]}", self)
             self.grid.place_agent(car, park.pos)
             self.schedule.add(car)  # Add to scheduler if using time steps
 
     def step(self):
         self.schedule.step()
+        self.datacollector.collect(self)
+
         print(f"Average happines: {self.get_average_happiness()}")
         print(f"Average stress: {self.get_average_stress()}")
 
