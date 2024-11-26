@@ -40,6 +40,10 @@ def get_map_data():
                 }
             )
 
+    # Sort by id
+    map_data["cars"].sort(key=lambda car: car["id"])
+    map_data["lights"].sort(key=lambda light: light["id"])
+
     return map_data
 
 

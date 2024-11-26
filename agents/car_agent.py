@@ -168,7 +168,6 @@ class CarAgent(mesa.Agent):
 
     def init_stats(self):
         self.time_waiting = 0
-        self.speed = 0.5  # Number of steps to move per turn (0.5 is 1 step per 2 frames)
         self.state: DriverState = DriverState.NORMAL
         self.happiness = 100
         self.stress = 0
@@ -184,7 +183,6 @@ class CarAgent(mesa.Agent):
             self.state = DriverState.HAPPY
         elif self.happiness < 30 or self.stress > 70:
             self.state = DriverState.ANGRY
-            self.speed = 1
         elif self.time_waiting > self.patience:
             self.state = DriverState.IMPATIENT
         else:
@@ -253,8 +251,5 @@ class CarAgent(mesa.Agent):
             self.destination = None
 
     def step(self):
-        if self.model.schedule.steps % (1 / self.speed) != 0:  # step every 1/speed steps
-            return
-
         self.update_emotional_state()
         self.move()

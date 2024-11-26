@@ -57,10 +57,15 @@ class CityModel(mesa.Model):
                 if cell_string[0] == "L":
                     id = int(cell_string[3:5])
                     mirror = cell_string[1] == "M"
-                    direction = set(cell_string[-1])
+                    direction = cell_string[-1]
 
-                    a = StoplightAgent(f"{'mirror_' if mirror else ''}light_{id}", self, mirror)
-                    r = RoadAgent(f"Road({x},{y})", self, direction)
+                    a = StoplightAgent(
+                        f"{'mirror_' if mirror else ''}light_{id}",
+                        self,
+                        mirror,
+                        direction,
+                    )
+                    r = RoadAgent(f"Road({x},{y})", self, set(direction))
 
                     self.grid.place_agent(a, (x, y))
                     self.grid.place_agent(r, (x, y))

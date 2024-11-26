@@ -63,7 +63,7 @@ def agent_portrayal(agent):
             "h": 0.5,  # Height of 1 cell
             "Filled": "true",
             "Color": agent.state.value,
-            "text": "M" if agent.is_mirror else f"S{agent.unique_id.split('_')[1]}",
+            "text": f"({agent.facingDirection[0]},{agent.facingDirection[1]})",  # "M" if agent.is_mirror else f"S{agent.unique_id.split('_')[1]}",
             "text_color": "black",
             "Layer": 1,
         }
