@@ -10,14 +10,15 @@ from mesa.datacollection import DataCollector
 
 class CityModel(mesa.Model):
 
-    def __init__(self, map: list[list[str]], seed=None):
-        super().__init__(seed=seed)
+    def __init__(self, map: list[list[str]], car_driving_style=None):
+        super().__init__()
         # self.num_agents = n
         self.map_height = len(map)
         self.map_width = len(map[0])
         self.map = self.convert_to_coordinate_system(map)
         self.grid = mesa.space.MultiGrid(self.map_width, self.map_height, False)
         self.schedule = mesa.time.RandomActivation(self)
+        self.car_driving_style = car_driving_style
 
         self.datacollector = DataCollector(
             model_reporters={
@@ -108,7 +109,11 @@ class CityModel(mesa.Model):
         ]
 
         for park in parking_agents:
-            car = CarAgent(f"car_{park.unique_id.split('_')[1]}", self)
+            car = CarAgent(
+                f"car_{park.unique_id.split('_')[1]}",
+                self,
+                driving_style=self.car_driving_style,
+            )
             self.grid.place_agent(car, park.pos)
             self.schedule.add(car)  # Add to scheduler if using time steps
 

@@ -1,6 +1,6 @@
 from flask import Flask, jsonify
 
-from agents.car_agent import CarAgent
+from agents.car_agent import CarAgent, DrivingStyle
 from agents.stoplight_agent import StoplightAgent
 from maps.city_map import CITY_MAP
 from models.city_model import CityModel
@@ -50,8 +50,9 @@ def get_map_data():
 @app.route("/map-data", methods=["GET"])
 def get_map_data_route():
     """Handle requests for map data."""
+    data = get_map_data()
     model.step()
-    return jsonify(get_map_data())
+    return jsonify(data)
 
 
 @app.route("/reset", methods=["GET"])

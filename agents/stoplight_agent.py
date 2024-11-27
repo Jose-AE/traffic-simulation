@@ -11,6 +11,7 @@ class StoplightState(Enum):
 
 class StoplightMode(Enum):
     CLOCK = "clock"
+    CLOCK_RANDOM = "clock_random"
     SMART = "smart"
 
 
@@ -20,7 +21,7 @@ class StoplightAgent(mesa.Agent):
         super().__init__(unique_id, model)
 
         self.state: StoplightState = StoplightState.GREEN
-        self.mode: StoplightMode = StoplightMode.CLOCK  # Default to SMART mode
+        self.mode: StoplightMode = StoplightMode.CLOCK_RANDOM  # Default to SMART mode
         self.is_mirror = is_mirror
 
         # Direction mapping
@@ -99,6 +100,16 @@ class StoplightAgent(mesa.Agent):
         else:
             self.state = StoplightState.RED
 
+    def random_clock_activation(self):
+        # Define the possible states
+        possible_states = [StoplightState.GREEN, StoplightState.YELLOW, StoplightState.RED]
+
+        # Optional: Define probabilities for each state (must sum to 1)
+        probabilities = [0.5, 0.2, 0.3]  # Example: 50% green, 20% yellow, 30% red
+
+        # Randomly select a state based on probabilities
+        self.state = self.random.choices(possible_states, probabilities)[0]
+
     def copy_neighbor(self):
         neighbor_positions = self.model.grid.get_neighborhood(
             self.pos, moore=False, include_center=False
@@ -149,9 +160,11 @@ class StoplightAgent(mesa.Agent):
         return nearby_cars
 
     def step(self):
-        # if self.is_mirror and self.mode != StoplightMode.SMART:
-        #     self.copy_neighbor()
+        if self.is_mirror and self.mode == StoplightMode.CLOCK_RANDOM:
+            self.copy_neighbor()
         if self.mode == StoplightMode.CLOCK:
             self.clock_activation()
         elif self.mode == StoplightMode.SMART:
             self.smart_activation()
+        elif self.mode == StoplightMode.CLOCK_RANDOM:
+            self.random_clock_activation()
