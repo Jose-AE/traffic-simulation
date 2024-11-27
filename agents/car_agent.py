@@ -25,17 +25,23 @@ class DriverState(Enum):
 
 
 class CarAgent(mesa.Agent):
-    def __init__(self, unique_id, model):
+    def __init__(self, unique_id, model, driving_style=None):
         super().__init__(unique_id, model)
 
         # Create the agent's variable and set the initial values.
-        self.destination: Optional[tuple[int, int]] = None
+        self.destination: ParkingAgent = None
         self.direction: tuple[int, int] = (0, 1)
         self.path: Optional[list[tuple[int, int]]] = []
         self.assigned_parking_spot = None
 
         # Stats
-        self.driving_style: DrivingStyle = DrivingStyle.COOPERATIVE
+        if not driving_style:
+            self.driving_style = self.random.choice(list(DrivingStyle))
+        else:
+            self.driving_style = driving_style
+
+        # print(f"{self.unique_id} is {self.driving_style}")
+
         self.patience = self.get_initial_patience()
 
         self.init_stats()
@@ -95,25 +101,21 @@ class CarAgent(mesa.Agent):
         Set the cars destination to a random parking spot
         """
 
-        parking_positions = [
-            pos
+        parking_agents = [
+            obj
             for cell_contents, pos in self.model.grid.coord_iter()
-            if cell_contents  # Check if cell is not empty
-            and any(isinstance(obj, ParkingAgent) and not obj.occupied for obj in cell_contents)
-            and pos != self.pos
+            if cell_contents  # Check if the cell is not empty
+            and pos != self.pos  # Ensure the position is not the agent's own position
+            for obj in cell_contents  # Iterate through the objects in the cell
+            if isinstance(obj, ParkingAgent)
+            and not obj.occupied  # Check if it is an unoccupied ParkingAgent
         ]
 
-        if parking_positions:
+        if parking_agents:
             # Assign a random parking spot as the destination
-            dest = self.random.choice(parking_positions)
+            dest = self.random.choice(parking_agents)
             self.destination = dest
-
-            # Get the ParkingAgent at this position and mark it as occupied
-            cell_contents = self.model.grid.get_cell_list_contents([dest])
-            parking_spot = next(obj for obj in cell_contents if isinstance(obj, ParkingAgent))
-            parking_spot.occupied = True
-
-            # print(f"{self.unique_id} is going to park_{parking_spot.unique_id}")
+            dest.occupied = True
 
         else:
             self.destination = None
@@ -209,6 +211,8 @@ class CarAgent(mesa.Agent):
         Calculate the shortest path to the destination using BFS.
         Updates the agent's path attribute with the calculated route.
         """
+        if not self.destination:
+            return
 
         queue = deque([[self.pos]])  # [    [(1,2),(1,2)],  [(1,2),(1,2)]    ]
         visited = set()  # Set to keep track of visited positions
@@ -220,7 +224,7 @@ class CarAgent(mesa.Agent):
             current = path[-1]  # The last position in the path
 
             # If we've reached the end, return the path
-            if current == self.destination:
+            if current == self.destination.pos:
                 self.path = path[1:]  # return path excluding current pos (give future moves)
                 ##print(f"path calculated for {self.unique_id} and path is {0}")
                 return
@@ -248,7 +252,11 @@ class CarAgent(mesa.Agent):
                 self.update_direction(next_pos)
                 self.model.grid.move_agent(self, next_pos)
         else:
-            self.destination = None
+            # When destination is reached, free the parking spot and remove the car
+            if self.destination:
+                self.destination.occupied = False
+                self.destination = None
+                # Remove the agent from the model
 
     def step(self):
         self.update_emotional_state()

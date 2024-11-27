@@ -4,7 +4,7 @@ from mesa.visualization.UserParam import Choice
 from mesa.visualization.modules import ChartModule
 
 from agents.building_agent import BuildingAgent
-from agents.car_agent import CarAgent
+from agents.car_agent import CarAgent, DrivingStyle
 from agents.parking_agent import ParkingAgent
 from agents.road_agent import RoadAgent
 from agents.stoplight_agent import StoplightAgent
@@ -96,7 +96,9 @@ def agent_portrayal(agent):
     return portrayal
 
 
-simulation_params = {"map": MAP}
+simulation_params = {
+    "map": MAP,
+}
 
 
 charts = ChartModule(
