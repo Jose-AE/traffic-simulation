@@ -61,6 +61,12 @@ def reset_model():
     return jsonify({"message": "Model has been reset."})
 
 
+@app.route("/", methods=["GET"])
+def root():
+    """Root"""
+    return jsonify("API is running.")
+
+
 if __name__ == "__main__":
     init_model()
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
